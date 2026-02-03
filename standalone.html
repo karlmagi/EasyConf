@@ -91,16 +91,21 @@
         .generate-btn:hover:not(:disabled) { background: var(--green-700); }
         .generate-btn:disabled { background: var(--gray-400); cursor: not-allowed; }
 
+        .copy-btn { background: var(--blue-600); }
+        .copy-btn:hover:not(:disabled) { background: var(--blue-700); }
+
         /* Output */
         .output { margin-top: 16px; }
         .output textarea { height: 400px; background: var(--gray-50); }
 
         /* Empty state */
-        .empty-state { display: flex; align-items: center; justify-content: center; height: 100vh; flex-direction: column; text-align: center; }
+        .empty-state { display: flex; align-items: center; justify-center; height: 100vh; flex-direction: column; text-align: center; }
         .empty-state h2 { font-size: 24px; margin-bottom: 8px; }
         .empty-state p { color: var(--gray-600); margin-bottom: 32px; }
         .empty-state button { padding: 12px 24px; background: var(--blue-600); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 500; cursor: pointer; }
         .empty-state button:hover { background: var(--blue-700); }
+
+        .no-vars { color: var(--gray-600); font-style: italic; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -114,6 +119,10 @@
             activeTabId: null,
             nextNumber: 1
         };
+
+        // References to input elements
+        let configTextarea = null;
+        let variableInputs = {};
 
         // Load from localStorage
         function loadState() {
@@ -130,13 +139,17 @@
             }
         }
 
-        // Save to localStorage
+        // Save to localStorage (debounced)
+        let saveTimeout;
         function saveState() {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-            } catch (e) {
-                console.error('Failed to save state:', e);
-            }
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                } catch (e) {
+                    console.error('Failed to save state:', e);
+                }
+            }, 300);
         }
 
         // Generate unique ID
@@ -239,7 +252,7 @@
             if (tab) {
                 tab.name = newName.slice(0, 50);
                 saveState();
-                render();
+                renderTabs();
             }
         }
 
@@ -254,6 +267,8 @@
             if (tab) {
                 tab.config = config;
                 saveState();
+                // Update variables panel without re-rendering entire app
+                updateVariablesPanel();
             }
         }
 
@@ -275,8 +290,13 @@
                     const { output } = replaceVariables(tab.config, tab.variables);
                     tab.output = applyLineSpacing(output, spacing);
                     saveState();
+                    // Update just the output textarea
+                    const outputTextarea = document.getElementById('output-textarea');
+                    if (outputTextarea) outputTextarea.value = tab.output;
                 }
-                render();
+                // Update slider label
+                const sliderLabel = document.getElementById('slider-label');
+                if (sliderLabel) sliderLabel.textContent = `Insert blank line every ${spacing} lines`;
             }
         }
 
@@ -286,11 +306,88 @@
                 const { output } = replaceVariables(tab.config, tab.variables);
                 tab.output = applyLineSpacing(output, tab.lineSpacing);
                 saveState();
-                render();
+                // Update just the output section
+                const outputTextarea = document.getElementById('output-textarea');
+                if (outputTextarea) outputTextarea.value = tab.output;
+
+                const copyBtn = document.getElementById('copy-btn');
+                if (copyBtn) copyBtn.style.display = tab.output ? 'block' : 'none';
             }
         }
 
-        // Render functions
+        // Render only tabs
+        function renderTabs() {
+            const tabBar = document.getElementById('tab-bar');
+            if (!tabBar) return;
+
+            tabBar.innerHTML = `
+                ${state.tabs.map(tab => `
+                    <div class="tab ${tab.id === state.activeTabId ? 'active' : ''}" onclick="setActiveTab('${tab.id}')">
+                        <span ondblclick="startEditTab(event, '${tab.id}')">${escapeHtml(tab.name)}</span>
+                        <button onclick="event.stopPropagation(); deleteTab('${tab.id}')">×</button>
+                    </div>
+                `).join('')}
+                <button class="new-tab-btn" onclick="createTab()">+</button>
+            `;
+        }
+
+        // Update variables panel dynamically
+        function updateVariablesPanel() {
+            const activeTab = state.tabs.find(t => t.id === state.activeTabId);
+            if (!activeTab) return;
+
+            const detectedVars = extractVariables(activeTab.config);
+            const { undefinedVars } = replaceVariables(activeTab.config, activeTab.variables);
+
+            const varsContainer = document.getElementById('variables-container');
+            const warningContainer = document.getElementById('warning-container');
+            const generateBtn = document.getElementById('generate-btn');
+
+            if (!varsContainer || !warningContainer || !generateBtn) return;
+
+            // Update variables inputs
+            if (detectedVars.length === 0) {
+                varsContainer.innerHTML = '<p class="no-vars">No variables detected. Use {{ variableName }} in your configuration.</p>';
+            } else {
+                varsContainer.innerHTML = detectedVars.map(varName => `
+                    <div class="var-item">
+                        <label>{{ ${escapeHtml(varName)} }}</label>
+                        <input
+                            type="text"
+                            id="var-${varName}"
+                            value="${escapeHtml(activeTab.variables[varName] || '')}"
+                            placeholder="Enter value for ${escapeHtml(varName)}"
+                        />
+                    </div>
+                `).join('');
+
+                // Attach event listeners to new inputs
+                detectedVars.forEach(varName => {
+                    const input = document.getElementById(`var-${varName}`);
+                    if (input) {
+                        input.addEventListener('input', (e) => {
+                            updateTabVariable(activeTab.id, varName, e.target.value);
+                        });
+                    }
+                });
+            }
+
+            // Update warning
+            if (undefinedVars.length > 0) {
+                warningContainer.innerHTML = `
+                    <div class="warning">
+                        ⚠️ Warning: The following variables are undefined: ${undefinedVars.map(v => `{{ ${v} }}`).join(', ')}
+                    </div>
+                `;
+            } else {
+                warningContainer.innerHTML = '';
+            }
+
+            // Update generate button state
+            generateBtn.disabled = !activeTab.config.trim();
+        }
+
+        // Full render
         function render() {
             const app = document.getElementById('app');
 
@@ -315,85 +412,87 @@
             const { undefinedVars } = replaceVariables(activeTab.config, activeTab.variables);
 
             app.innerHTML = `
-                <div class="tab-bar">
-                    ${state.tabs.map(tab => `
-                        <div class="tab ${tab.id === state.activeTabId ? 'active' : ''}" onclick="setActiveTab('${tab.id}')">
-                            <span ondblclick="startEditTab(event, '${tab.id}')">${escapeHtml(tab.name)}</span>
-                            <button onclick="event.stopPropagation(); deleteTab('${tab.id}')">×</button>
-                        </div>
-                    `).join('')}
-                    <button class="new-tab-btn" onclick="createTab()">+</button>
-                </div>
+                <div id="tab-bar" class="tab-bar"></div>
 
                 <div class="content">
                     <div class="panel left">
                         <h2>Configuration Template</h2>
                         <textarea
+                            id="config-textarea"
                             placeholder="Paste your network configuration here.&#10;&#10;Use {{ variableName }} for values you want to replace.&#10;&#10;Example:&#10;hostname {{ hostname }}&#10;interface GigabitEthernet0/0/0&#10; description {{ interfaceDesc }}&#10; ip address {{ ipAddress }} {{ subnetMask }}"
-                            oninput="updateTabConfig('${activeTab.id}', this.value); debounceRender()"
                         >${escapeHtml(activeTab.config)}</textarea>
                     </div>
 
                     <div class="panel right">
                         <h2>Variables</h2>
-                        <div class="variables">
-                            ${detectedVars.length === 0 ?
-                                '<p style="color: var(--gray-600); font-style: italic; font-size: 14px;">No variables detected. Use {{ variableName }} in your configuration.</p>' :
-                                detectedVars.map(varName => `
-                                    <div class="var-item">
-                                        <label>{{ ${escapeHtml(varName)} }}</label>
-                                        <input
-                                            type="text"
-                                            value="${escapeHtml(activeTab.variables[varName] || '')}"
-                                            placeholder="Enter value for ${escapeHtml(varName)}"
-                                            oninput="updateTabVariable('${activeTab.id}', '${varName}', this.value)"
-                                        />
-                                    </div>
-                                `).join('')
-                            }
-                        </div>
+                        <div id="variables-container" class="variables"></div>
 
                         <div class="slider-group">
-                            <label>Insert blank line every ${activeTab.lineSpacing} lines</label>
+                            <label id="slider-label">Insert blank line every ${activeTab.lineSpacing} lines</label>
                             <input
+                                id="spacing-slider"
                                 type="range"
                                 min="1"
                                 max="20"
                                 value="${activeTab.lineSpacing}"
-                                oninput="updateTabLineSpacing('${activeTab.id}', parseInt(this.value))"
                             />
                         </div>
 
-                        ${undefinedVars.length > 0 ? `
-                            <div class="warning">
-                                ⚠️ Warning: The following variables are undefined: ${undefinedVars.map(v => `{{ ${v} }}`).join(', ')}
-                            </div>
-                        ` : ''}
+                        <div id="warning-container"></div>
 
-                        <button
-                            class="generate-btn"
-                            onclick="generateOutput('${activeTab.id}')"
-                            ${!activeTab.config.trim() ? 'disabled' : ''}
-                        >
+                        <button id="generate-btn" class="generate-btn">
                             Generate Configuration
                         </button>
 
                         <div class="output">
                             <h2>Generated Output</h2>
-                            <textarea readonly placeholder="Click Generate to see output">${escapeHtml(activeTab.output)}</textarea>
-                            ${activeTab.output ? `
-                                <button
-                                    class="generate-btn"
-                                    style="margin-top: 8px; background: var(--blue-600);"
-                                    onclick="copyToClipboard('${activeTab.id}')"
-                                >
-                                    Copy to Clipboard
-                                </button>
-                            ` : ''}
+                            <textarea id="output-textarea" readonly placeholder="Click Generate to see output">${escapeHtml(activeTab.output)}</textarea>
+                            <button
+                                id="copy-btn"
+                                class="generate-btn copy-btn"
+                                style="margin-top: 8px; display: ${activeTab.output ? 'block' : 'none'};"
+                            >
+                                Copy to Clipboard
+                            </button>
                         </div>
                     </div>
                 </div>
             `;
+
+            // Render tabs
+            renderTabs();
+
+            // Attach event listeners
+            configTextarea = document.getElementById('config-textarea');
+            if (configTextarea) {
+                configTextarea.addEventListener('input', (e) => {
+                    updateTabConfig(activeTab.id, e.target.value);
+                });
+            }
+
+            const spacingSlider = document.getElementById('spacing-slider');
+            if (spacingSlider) {
+                spacingSlider.addEventListener('input', (e) => {
+                    updateTabLineSpacing(activeTab.id, parseInt(e.target.value));
+                });
+            }
+
+            const generateBtn = document.getElementById('generate-btn');
+            if (generateBtn) {
+                generateBtn.addEventListener('click', () => {
+                    generateOutput(activeTab.id);
+                });
+            }
+
+            const copyBtn = document.getElementById('copy-btn');
+            if (copyBtn) {
+                copyBtn.addEventListener('click', () => {
+                    copyToClipboard(activeTab.id);
+                });
+            }
+
+            // Initial variables panel render
+            updateVariablesPanel();
         }
 
         function escapeHtml(text) {
@@ -430,7 +529,7 @@
             if (newName.trim()) {
                 renameTab(id, newName.trim());
             } else {
-                render();
+                renderTabs();
             }
         }
 
@@ -438,7 +537,7 @@
             if (event.key === 'Enter') {
                 finishEditTab(id, value);
             } else if (event.key === 'Escape') {
-                render();
+                renderTabs();
             }
         }
 
@@ -451,13 +550,6 @@
                     console.error('Failed to copy:', err);
                 });
             }
-        }
-
-        // Debounce rendering for performance
-        let renderTimeout;
-        function debounceRender() {
-            clearTimeout(renderTimeout);
-            renderTimeout = setTimeout(render, 300);
         }
 
         // Initialize
