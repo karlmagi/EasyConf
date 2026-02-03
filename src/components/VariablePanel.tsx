@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { extractVariables, replaceVariables, applyLineSpacing } from '@/lib/templateParser';
+import { translations, Language } from '@/lib/translations';
 import VariableInput from './VariableInput';
 
 interface VariablePanelProps {
@@ -14,6 +15,7 @@ interface VariablePanelProps {
   onLineSpacingChange: (spacing: number) => void;
   onGenerate: (output: string) => void;
   onFilenameChange: (filename: string) => void;
+  language?: Language;
 }
 
 export default function VariablePanel({
@@ -26,7 +28,9 @@ export default function VariablePanel({
   onLineSpacingChange,
   onGenerate,
   onFilenameChange,
+  language = 'en',
 }: VariablePanelProps) {
+  const t = translations[language];
   const [isGenerating, setIsGenerating] = useState(false);
   const [detectedVars, setDetectedVars] = useState<string[]>([]);
 
@@ -102,20 +106,20 @@ export default function VariablePanel({
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-3">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Variables
+            {t.variables}
           </h2>
           <div className="group relative">
             <svg className="w-4 h-4 text-gray-400 cursor-help" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
             </svg>
             <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-10">
-              Variables are auto-detected from your config. Type {`{{ name }}`} in the editor to create them.
+              {t.variablesTooltip}
             </div>
           </div>
         </div>
         {detectedVars.length === 0 ? (
           <p className="text-sm text-gray-500 dark:text-gray-400 italic">
-            No variables detected. Use {`{{ variableName }}`} in your configuration.
+            {t.noVariables}
           </p>
         ) : (
           <div className="space-y-3">
@@ -138,14 +142,14 @@ export default function VariablePanel({
             htmlFor="line-spacing"
             className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
-            Insert blank line every {lineSpacing} lines
+            {t.lineSpacing(lineSpacing)}
           </label>
           <div className="group relative">
             <svg className="w-4 h-4 text-gray-400 cursor-help" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
             </svg>
             <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-10">
-              Adds blank lines to your output for better readability. Changes apply instantly!
+              {t.lineSpacingTooltip}
             </div>
           </div>
         </div>
@@ -182,7 +186,7 @@ export default function VariablePanel({
             </svg>
             <div className="flex-1">
               <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
-                Warning: The following variables are undefined:
+                {t.warningUndefined}
               </p>
               <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
                 {undefinedVars.map((v) => `{{ ${v} }}`).join(', ')}
@@ -204,7 +208,7 @@ export default function VariablePanel({
               : 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed'
           }
         `}
-        aria-label="Generate configuration"
+        aria-label={t.generateConfig}
       >
         {isGenerating ? (
           <span className="flex items-center justify-center">
@@ -228,23 +232,23 @@ export default function VariablePanel({
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-            Generating...
+            {t.generating}
           </span>
         ) : (
-          'Generate Configuration'
+          t.generateConfig
         )}
       </button>
 
       {/* Output Section */}
       <div className="flex-1 flex flex-col min-h-0">
         <h2 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">
-          Generated Output
+          {t.generatedOutput}
         </h2>
         <div className="flex-1 relative">
           <textarea
             value={output}
             readOnly
-            placeholder="Click Generate to see output"
+            placeholder={t.clickGenerate}
             className="absolute inset-0 w-full h-full p-3 font-mono text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
             spellCheck={false}
           />
@@ -256,21 +260,21 @@ export default function VariablePanel({
                 type="text"
                 value={filename}
                 onChange={(e) => onFilenameChange(e.target.value)}
-                placeholder="filename.txt"
+                placeholder={t.filename}
                 className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
                 onClick={handleDownload}
                 className="px-4 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
               >
-                Download
+                {t.download}
               </button>
             </div>
             <button
               onClick={() => navigator.clipboard.writeText(output)}
               className="w-full px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              Copy to Clipboard
+              {t.copyToClipboard}
             </button>
           </div>
         )}
