@@ -80,7 +80,7 @@
         /* Variables */
         .variables { margin-bottom: 24px; }
         .var-item { margin-bottom: 12px; }
-        .var-item label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 4px; color: var(--gray-700); }
+        .var-item label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 4px; color: var(--fg); }
         .var-item input { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--fg); font-size: 14px; }
         .var-item input:focus { outline: 2px solid var(--blue-500); outline-offset: 0; }
 
@@ -364,7 +364,7 @@
             } else {
                 varsContainer.innerHTML = detectedVars.map(varName => `
                     <div class="var-item">
-                        <label>{{ ${escapeHtml(varName)} }}</label>
+                        <label>${escapeHtml(varName)}</label>
                         <input
                             type="text"
                             id="var-${varName}"
