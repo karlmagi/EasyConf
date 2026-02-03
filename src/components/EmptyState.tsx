@@ -1,10 +1,14 @@
 'use client';
 
+import { translations, Language } from '@/lib/translations';
+
 interface EmptyStateProps {
   onCreateTab: () => void;
+  language?: Language;
 }
 
-export default function EmptyState({ onCreateTab }: EmptyStateProps) {
+export default function EmptyState({ onCreateTab, language = 'en' }: EmptyStateProps) {
+  const t = translations[language];
   return (
     <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
       <div className="text-center">
@@ -24,15 +28,15 @@ export default function EmptyState({ onCreateTab }: EmptyStateProps) {
           </svg>
         </div>
         <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-          No configurations yet
+          {t.createFirstConfig}
         </h2>
         <p className="text-gray-600 dark:text-gray-400 mb-8">
-          Create your first configuration to get started
+          {t.getStarted}
         </p>
         <button
           onClick={onCreateTab}
           className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-          aria-label="Create first configuration tab"
+          aria-label={t.createTab}
         >
           <svg
             className="w-5 h-5 mr-2"
@@ -47,7 +51,7 @@ export default function EmptyState({ onCreateTab }: EmptyStateProps) {
               d="M12 4v16m8-8H4"
             />
           </svg>
-          Create First Configuration
+          {t.createTab}
         </button>
       </div>
     </div>

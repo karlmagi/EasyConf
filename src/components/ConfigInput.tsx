@@ -36,20 +36,24 @@ languages.cisco = ciscoLanguage;
 languages.juniper = juniperLanguage;
 languages.bashExtended = bashLanguageExtended;
 
+import { translations, Language } from '@/lib/translations';
+
 interface ConfigInputProps {
   value: string;
   syntax: 'bash' | 'cisco' | 'juniper' | 'none';
   onChange: (value: string) => void;
   onSyntaxChange: (syntax: 'bash' | 'cisco' | 'juniper' | 'none') => void;
+  language?: Language;
 }
 
-export default function ConfigInput({ value, syntax, onChange, onSyntaxChange }: ConfigInputProps) {
+export default function ConfigInput({ value, syntax, onChange, onSyntaxChange, language = 'en' }: ConfigInputProps) {
+  const t = translations[language];
   const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const editorRef = useRef<HTMLDivElement>(null);
   const isTypingRef = useRef(false);
 
   const handleAddVariable = () => {
-    const varName = prompt('Enter variable name:');
+    const varName = prompt(t.enterVariableName);
     if (!varName || !varName.trim()) return;
 
     const cleanVarName = varName.trim().replace(/\s+/g, '_');
@@ -76,14 +80,14 @@ export default function ConfigInput({ value, syntax, onChange, onSyntaxChange }:
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Configuration Template
+            {t.configTemplate}
           </h2>
           <div className="group relative">
             <svg className="w-4 h-4 text-gray-400 cursor-help" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
             </svg>
             <div className="absolute left-0 top-full mt-2 hidden group-hover:block w-72 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-10">
-              Paste your config here. Replace values with variables like {`{{ hostname }}`} - they show in <span className="text-orange-400 font-semibold">orange</span>.
+              {t.configTooltip('orange')}
             </div>
           </div>
         </div>
@@ -92,9 +96,9 @@ export default function ConfigInput({ value, syntax, onChange, onSyntaxChange }:
             value={syntax}
             onChange={(e) => onSyntaxChange(e.target.value as any)}
             className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            title="Choose syntax highlighting mode"
+            title={t.syntaxMode}
           >
-            <option value="none">No Highlighting</option>
+            <option value="none">{t.noHighlighting}</option>
             <option value="bash">Bash</option>
             <option value="cisco">Cisco IOS</option>
             <option value="juniper">Juniper SRX</option>
@@ -102,9 +106,9 @@ export default function ConfigInput({ value, syntax, onChange, onSyntaxChange }:
           <button
             onClick={handleAddVariable}
             className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-            title="Add variable at cursor position - saves typing {{ }}"
+            title={t.addVariableTooltip}
           >
-            + Add Variable
+            {t.addVariable}
           </button>
         </div>
       </div>
@@ -129,11 +133,11 @@ export default function ConfigInput({ value, syntax, onChange, onSyntaxChange }:
           }}
           highlight={getHighlighter()}
           padding={12}
-          placeholder={`Paste your network configuration here.
+          placeholder={`${t.pasteConfig}
 
-Use {{ variableName }} for values you want to replace.
+${t.useVariables}
 
-Example:
+${t.example}
 hostname {{ hostname }}
 interface GigabitEthernet0/0/0
  description {{ interfaceDesc }}
