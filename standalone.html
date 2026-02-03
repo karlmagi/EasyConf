@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EasyConf - Network Configuration Tool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -67,6 +68,9 @@
         h2 { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
 
         .header-with-button { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .header-controls { display: flex; gap: 8px; align-items: center; }
+        .syntax-select { padding: 6px 12px; background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: 8px; font-size: 14px; cursor: pointer; }
+        .syntax-select:focus { outline: 2px solid var(--blue-500); outline-offset: 0; }
         .add-var-btn { padding: 6px 12px; background: var(--blue-600); color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
         .add-var-btn:hover { background: var(--blue-700); }
 
@@ -220,7 +224,8 @@
                 config: '',
                 variables: {},
                 output: '',
-                lineSpacing: 5
+                lineSpacing: 5,
+                syntax: 'none'
             };
             state.tabs.push(tab);
             state.activeTabId = tab.id;
@@ -426,7 +431,15 @@
                     <div class="panel left">
                         <div class="header-with-button">
                             <h2>Configuration Template</h2>
-                            <button id="add-var-btn" class="add-var-btn">+ Add Variable</button>
+                            <div class="header-controls">
+                                <select id="syntax-select" class="syntax-select">
+                                    <option value="none" ${(activeTab.syntax || 'none') === 'none' ? 'selected' : ''}>No Highlighting</option>
+                                    <option value="bash" ${activeTab.syntax === 'bash' ? 'selected' : ''}>Bash</option>
+                                    <option value="cisco" ${activeTab.syntax === 'cisco' ? 'selected' : ''}>Cisco IOS</option>
+                                    <option value="juniper" ${activeTab.syntax === 'juniper' ? 'selected' : ''}>Juniper SRX</option>
+                                </select>
+                                <button id="add-var-btn" class="add-var-btn">+ Add Variable</button>
+                            </div>
                         </div>
                         <textarea
                             id="config-textarea"
@@ -509,8 +522,23 @@
                 });
             }
 
+            const syntaxSelect = document.getElementById('syntax-select');
+            if (syntaxSelect) {
+                syntaxSelect.addEventListener('change', (e) => {
+                    updateTabSyntax(activeTab.id, e.target.value);
+                });
+            }
+
             // Initial variables panel render
             updateVariablesPanel();
+        }
+
+        function updateTabSyntax(id, syntax) {
+            const tab = state.tabs.find(t => t.id === id);
+            if (tab) {
+                tab.syntax = syntax;
+                saveState();
+            }
         }
 
         function handleAddVariable(tabId) {

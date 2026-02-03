@@ -10,6 +10,7 @@ export interface ConfigTab {
   variables: Record<string, string>;
   output: string;
   lineSpacing: number;
+  syntax: 'bash' | 'cisco' | 'juniper' | 'none';
 }
 
 interface TabsState {
@@ -40,6 +41,7 @@ export function useConfigTabs() {
         variables: {},
         output: '',
         lineSpacing: 5,
+        syntax: 'none',
       };
       setState({
         tabs: [defaultTab],
@@ -77,6 +79,7 @@ export function useConfigTabs() {
       variables: {},
       output: '',
       lineSpacing: 5,
+      syntax: 'none',
     };
 
     const newState: TabsState = {
@@ -180,6 +183,17 @@ export function useConfigTabs() {
     });
   }, [state, immediateSave]);
 
+  const updateSyntax = useCallback((id: string, syntax: 'bash' | 'cisco' | 'juniper' | 'none') => {
+    const newTabs = state.tabs.map((tab) =>
+      tab.id === id ? { ...tab, syntax } : tab
+    );
+
+    immediateSave({
+      ...state,
+      tabs: newTabs,
+    });
+  }, [state, immediateSave]);
+
   return {
     tabs: state.tabs,
     activeTab,
@@ -191,5 +205,6 @@ export function useConfigTabs() {
     updateTabVariables,
     updateTabOutput,
     updateLineSpacing,
+    updateSyntax,
   };
 }
