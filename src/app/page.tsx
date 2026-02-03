@@ -19,6 +19,7 @@ export default function Home() {
     updateTabOutput,
     updateLineSpacing,
     updateSyntax,
+    updateFilename,
   } = useConfigTabs();
 
   // If no tabs, show empty state
@@ -58,9 +59,11 @@ export default function Home() {
               variables={activeTab.variables}
               output={activeTab.output}
               lineSpacing={activeTab.lineSpacing}
+              filename={activeTab.filename || 'config.txt'}
               onVariablesChange={(variables) => updateTabVariables(activeTab.id, variables)}
               onLineSpacingChange={(spacing) => updateLineSpacing(activeTab.id, spacing)}
               onGenerate={(output) => updateTabOutput(activeTab.id, output)}
+              onFilenameChange={(filename) => updateFilename(activeTab.id, filename)}
             />
           </div>
         </div>

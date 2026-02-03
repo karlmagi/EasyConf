@@ -9,9 +9,11 @@ interface VariablePanelProps {
   variables: Record<string, string>;
   output: string;
   lineSpacing: number;
+  filename: string;
   onVariablesChange: (variables: Record<string, string>) => void;
   onLineSpacingChange: (spacing: number) => void;
   onGenerate: (output: string) => void;
+  onFilenameChange: (filename: string) => void;
 }
 
 export default function VariablePanel({
@@ -19,9 +21,11 @@ export default function VariablePanel({
   variables,
   output,
   lineSpacing,
+  filename,
   onVariablesChange,
   onLineSpacingChange,
   onGenerate,
+  onFilenameChange,
 }: VariablePanelProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [detectedVars, setDetectedVars] = useState<string[]>([]);
@@ -77,6 +81,20 @@ export default function VariablePanel({
   }, [lineSpacing]);
 
   const canGenerate = config.trim() !== '';
+
+  const handleDownload = () => {
+    if (!output) return;
+
+    const blob = new Blob([output], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename || 'config.txt';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="h-full flex flex-col p-4 bg-white dark:bg-gray-900">
@@ -212,12 +230,29 @@ export default function VariablePanel({
           />
         </div>
         {output && (
-          <button
-            onClick={() => navigator.clipboard.writeText(output)}
-            className="mt-2 px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Copy to Clipboard
-          </button>
+          <div className="mt-2 space-y-2">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={filename}
+                onChange={(e) => onFilenameChange(e.target.value)}
+                placeholder="filename.txt"
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                onClick={handleDownload}
+                className="px-4 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                Download
+              </button>
+            </div>
+            <button
+              onClick={() => navigator.clipboard.writeText(output)}
+              className="w-full px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              Copy to Clipboard
+            </button>
+          </div>
         )}
       </div>
     </div>

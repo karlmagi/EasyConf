@@ -225,7 +225,8 @@
                 variables: {},
                 output: '',
                 lineSpacing: 5,
-                syntax: 'none'
+                syntax: 'none',
+                filename: 'config.txt'
             };
             state.tabs.push(tab);
             state.activeTabId = tab.id;
@@ -471,13 +472,31 @@
                         <div class="output">
                             <h2>Generated Output</h2>
                             <textarea id="output-textarea" readonly placeholder="Click Generate to see output">${escapeHtml(activeTab.output)}</textarea>
-                            <button
-                                id="copy-btn"
-                                class="generate-btn copy-btn"
-                                style="margin-top: 8px; display: ${activeTab.output ? 'block' : 'none'};"
-                            >
-                                Copy to Clipboard
-                            </button>
+                            <div style="margin-top: 8px; display: ${activeTab.output ? 'block' : 'none'};">
+                                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                                    <input
+                                        id="filename-input"
+                                        type="text"
+                                        value="${escapeHtml(activeTab.filename || 'config.txt')}"
+                                        placeholder="filename.txt"
+                                        style="flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--fg); font-size: 14px;"
+                                    />
+                                    <button
+                                        id="download-btn"
+                                        class="generate-btn copy-btn"
+                                        style="background: var(--green-600); margin: 0;"
+                                    >
+                                        Download
+                                    </button>
+                                </div>
+                                <button
+                                    id="copy-btn"
+                                    class="generate-btn copy-btn"
+                                    style="width: 100%;"
+                                >
+                                    Copy to Clipboard
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -529,8 +548,45 @@
                 });
             }
 
+            const filenameInput = document.getElementById('filename-input');
+            if (filenameInput) {
+                filenameInput.addEventListener('input', (e) => {
+                    updateTabFilename(activeTab.id, e.target.value);
+                });
+            }
+
+            const downloadBtn = document.getElementById('download-btn');
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', () => {
+                    downloadOutput(activeTab.id);
+                });
+            }
+
             // Initial variables panel render
             updateVariablesPanel();
+        }
+
+        function updateTabFilename(id, filename) {
+            const tab = state.tabs.find(t => t.id === id);
+            if (tab) {
+                tab.filename = filename;
+                saveState();
+            }
+        }
+
+        function downloadOutput(id) {
+            const tab = state.tabs.find(t => t.id === id);
+            if (tab && tab.output) {
+                const blob = new Blob([tab.output], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = tab.filename || 'config.txt';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
         }
 
         function updateTabSyntax(id, syntax) {
