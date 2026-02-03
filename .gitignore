@@ -15,7 +15,7 @@
 
 # next.js
 /.next/
-/out/
+# /out/ - Commented out to include built files for offline usage
 
 # production
 /build
