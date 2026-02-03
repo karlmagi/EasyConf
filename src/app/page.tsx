@@ -26,7 +26,7 @@ export default function Home() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900 relative">
       {/* Tab Bar */}
       <TabBar
         tabs={tabs}
@@ -62,6 +62,11 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <div className="fixed bottom-0 right-0 p-2 text-xs text-gray-600 dark:text-gray-400">
+        Vibecoded by karlmagi
+      </div>
     </div>
   );
 }
