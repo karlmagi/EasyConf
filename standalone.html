@@ -59,6 +59,10 @@
         .tab button:hover { background: var(--gray-400); }
         .new-tab-btn { padding: 12px 16px; background: none; border: none; color: var(--blue-600); cursor: pointer; font-size: 20px; }
         .new-tab-btn:hover { background: var(--gray-200); }
+        .theme-btn { padding: 12px 16px; background: var(--gray-600); color: white; border: none; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px; border-left: 1px solid var(--border); }
+        .theme-btn:hover { background: var(--gray-700); }
+        .console-btn { padding: 12px 16px; background: #7c3aed; color: white; border: none; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px; border-left: 1px solid var(--border); }
+        .console-btn:hover { background: #6d28d9; }
 
         /* Main content */
         .content { flex: 1; display: flex; overflow: hidden; }
@@ -271,11 +275,13 @@
     <script>
         // State management
         const STORAGE_KEY = 'easyconf_data';
+        const THEME_KEY = 'easyconf_theme';
         let state = {
             tabs: [],
             activeTabId: null,
             nextNumber: 1
         };
+        let isDarkMode = false;
 
         // References to input elements
         let configTextarea = null;
@@ -479,6 +485,10 @@
             const tabBar = document.getElementById('tab-bar');
             if (!tabBar) return;
 
+            const themeIcon = isDarkMode
+                ? '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>'
+                : '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>';
+
             tabBar.innerHTML = `
                 ${state.tabs.map(tab => `
                     <div class="tab ${tab.id === state.activeTabId ? 'active' : ''}" onclick="setActiveTab('${tab.id}')">
@@ -487,6 +497,16 @@
                     </div>
                 `).join('')}
                 <button class="new-tab-btn" onclick="createTab()">+</button>
+                <button class="theme-btn" onclick="toggleTheme()" title="${isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}">
+                    ${themeIcon}
+                    ${isDarkMode ? 'Light' : 'Dark'}
+                </button>
+                <button class="console-btn" onclick="alert('Serial console is only available in the online version (GitHub Pages). Use Chrome, Edge, or Opera.')" title="Serial Console (Online Only)">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Console
+                </button>
             `;
         }
 
@@ -829,6 +849,36 @@
             }
         }
 
+        // Theme toggle
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            if (isDarkMode) {
+                document.documentElement.style.colorScheme = 'dark';
+                localStorage.setItem(THEME_KEY, 'dark');
+            } else {
+                document.documentElement.style.colorScheme = 'light';
+                localStorage.setItem(THEME_KEY, 'light');
+            }
+            renderTabs(); // Re-render to update theme button
+        }
+
+        // Initialize theme
+        function initTheme() {
+            const savedTheme = localStorage.getItem(THEME_KEY);
+            if (savedTheme === 'dark') {
+                isDarkMode = true;
+                document.documentElement.style.colorScheme = 'dark';
+            } else if (savedTheme === 'light') {
+                isDarkMode = false;
+                document.documentElement.style.colorScheme = 'light';
+            } else {
+                // Use system preference
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                isDarkMode = prefersDark;
+                document.documentElement.style.colorScheme = prefersDark ? 'dark' : 'light';
+            }
+        }
+
         // Docs modal toggle
         function toggleDocs() {
             const modal = document.getElementById('docs-modal');
@@ -846,6 +896,7 @@
         });
 
         // Initialize
+        initTheme();
         loadState();
         render();
     </script>
