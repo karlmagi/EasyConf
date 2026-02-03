@@ -18,6 +18,7 @@ export default function Home() {
     updateTabVariables,
     updateTabOutput,
     updateLineSpacing,
+    updateSyntax,
   } = useConfigTabs();
 
   // If no tabs, show empty state
@@ -44,7 +45,9 @@ export default function Home() {
           <div className="w-1/2 border-r border-gray-300 dark:border-gray-700 overflow-auto">
             <ConfigInput
               value={activeTab.config}
+              syntax={activeTab.syntax || 'none'}
               onChange={(config) => updateTabConfig(activeTab.id, config)}
+              onSyntaxChange={(syntax) => updateSyntax(activeTab.id, syntax)}
             />
           </div>
 
