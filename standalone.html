@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyConf - Network Configuration Tool</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #ffffff;
+            --fg: #171717;
+            --border: #d1d5dc;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-400: #99a1af;
+            --gray-600: #4a5565;
+            --gray-700: #364153;
+            --gray-900: #101828;
+            --blue-500: #3080ff;
+            --blue-600: #155dfc;
+            --blue-700: #1447e6;
+            --green-600: #00a544;
+            --green-700: #008138;
+            --yellow-50: #fefce8;
+            --yellow-200: #fff085;
+            --yellow-600: #cd8900;
+            --yellow-800: #874b00;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0a0a0a;
+                --fg: #ededed;
+                --border: #364153;
+                --gray-50: #101828;
+                --gray-100: #1e2939;
+                --gray-200: #364153;
+                --gray-400: #6a7282;
+                --gray-600: #99a1af;
+                --gray-700: #d1d5dc;
+                --gray-900: #f3f4f6;
+            }
+        }
+
+        html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--fg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+
+        #app { height: 100vh; display: flex; flex-direction: column; }
+
+        /* Tabs */
+        .tab-bar { display: flex; background: var(--gray-100); border-bottom: 1px solid var(--border); overflow-x: auto; }
+        .tab { display: flex; align-items: center; padding: 12px 16px; min-width: 120px; max-width: 200px; border-right: 1px solid var(--border); cursor: pointer; font-size: 14px; background: transparent; }
+        .tab:hover { background: var(--gray-200); }
+        .tab.active { background: var(--bg); border-bottom: 2px solid var(--blue-500); font-weight: 600; }
+        .tab input { background: var(--bg); border: 1px solid var(--blue-500); border-radius: 4px; padding: 2px 4px; font-size: 14px; flex: 1; }
+        .tab button { margin-left: 8px; background: none; border: none; cursor: pointer; color: var(--fg); padding: 4px; border-radius: 4px; }
+        .tab button:hover { background: var(--gray-400); }
+        .new-tab-btn { padding: 12px 16px; background: none; border: none; color: var(--blue-600); cursor: pointer; font-size: 20px; }
+        .new-tab-btn:hover { background: var(--gray-200); }
+
+        /* Main content */
+        .content { flex: 1; display: flex; overflow: hidden; }
+        .panel { width: 50%; padding: 16px; overflow: auto; }
+        .panel.left { border-right: 1px solid var(--border); }
+
+        h2 { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
+
+        textarea { width: 100%; height: calc(100% - 40px); padding: 12px; font-family: "Courier New", monospace; font-size: 13px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--fg); resize: none; }
+        textarea:focus { outline: 2px solid var(--blue-500); outline-offset: 0; }
+
+        /* Variables */
+        .variables { margin-bottom: 24px; }
+        .var-item { margin-bottom: 12px; }
+        .var-item label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 4px; color: var(--gray-700); }
+        .var-item input { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--fg); font-size: 14px; }
+        .var-item input:focus { outline: 2px solid var(--blue-500); outline-offset: 0; }
+
+        /* Slider */
+        .slider-group { margin-bottom: 24px; }
+        .slider-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+        .slider-group input[type="range"] { width: 100%; height: 8px; border-radius: 4px; background: var(--gray-200); outline: none; -webkit-appearance: none; }
+        .slider-group input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--blue-600); cursor: pointer; }
+        .slider-group input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--blue-600); cursor: pointer; border: none; }
+
+        /* Warning */
+        .warning { background: var(--yellow-50); border: 1px solid var(--yellow-200); border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 14px; color: var(--yellow-800); }
+
+        /* Button */
+        .generate-btn { width: 100%; padding: 12px; background: var(--green-600); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 16px; }
+        .generate-btn:hover:not(:disabled) { background: var(--green-700); }
+        .generate-btn:disabled { background: var(--gray-400); cursor: not-allowed; }
+
+        /* Output */
+        .output { margin-top: 16px; }
+        .output textarea { height: 400px; background: var(--gray-50); }
+
+        /* Empty state */
+        .empty-state { display: flex; align-items: center; justify-content: center; height: 100vh; flex-direction: column; text-align: center; }
+        .empty-state h2 { font-size: 24px; margin-bottom: 8px; }
+        .empty-state p { color: var(--gray-600); margin-bottom: 32px; }
+        .empty-state button { padding: 12px 24px; background: var(--blue-600); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 500; cursor: pointer; }
+        .empty-state button:hover { background: var(--blue-700); }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script>
+        // State management
+        const STORAGE_KEY = 'easyconf_data';
+        let state = {
+            tabs: [],
+            activeTabId: null,
+            nextNumber: 1
+        };
+
+        // Load from localStorage
+        function loadState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    state = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Failed to load state:', e);
+                }
+            }
+            if (state.tabs.length === 0) {
+                createTab();
+            }
+        }
+
+        // Save to localStorage
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {
+                console.error('Failed to save state:', e);
+            }
+        }
+
+        // Generate unique ID
+        function generateId() {
+            return 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Extract variables from config
+        function extractVariables(config) {
+            const regex = /\{\{\s*(\w+)\s*\}\}/g;
+            const found = [];
+            const seen = new Set();
+            let match;
+            while ((match = regex.exec(config)) !== null) {
+                const varName = match[1];
+                if (!seen.has(varName)) {
+                    seen.add(varName);
+                    found.push(varName);
+                }
+            }
+            return found;
+        }
+
+        // Replace variables
+        function replaceVariables(config, variables) {
+            const regex = /\{\{\s*(\w+)\s*\}\}/g;
+            const undefinedVars = [];
+            const output = config.replace(regex, (match, varName) => {
+                if (variables[varName] && variables[varName].trim() !== '') {
+                    return variables[varName];
+                } else {
+                    if (!undefinedVars.includes(varName)) {
+                        undefinedVars.push(varName);
+                    }
+                    return match;
+                }
+            });
+            return { output, undefinedVars };
+        }
+
+        // Apply line spacing
+        function applyLineSpacing(text, spacing) {
+            if (spacing <= 0 || !text) return text;
+            const lines = text.split('\n');
+            const result = [];
+            for (let i = 0; i < lines.length; i++) {
+                result.push(lines[i]);
+                if ((i + 1) % spacing === 0 && i < lines.length - 1) {
+                    result.push('');
+                }
+            }
+            return result.join('\n');
+        }
+
+        // Tab operations
+        function createTab() {
+            const tab = {
+                id: generateId(),
+                name: `Config ${state.nextNumber}`,
+                config: '',
+                variables: {},
+                output: '',
+                lineSpacing: 5
+            };
+            state.tabs.push(tab);
+            state.activeTabId = tab.id;
+            state.nextNumber++;
+            saveState();
+            render();
+        }
+
+        function deleteTab(id) {
+            const tab = state.tabs.find(t => t.id === id);
+            if (!tab) return;
+
+            const hasContent = tab.config.trim() !== '' ||
+                              Object.values(tab.variables).some(v => v.trim() !== '') ||
+                              tab.output.trim() !== '';
+
+            if (hasContent && !confirm(`Delete '${tab.name}'? This cannot be undone.`)) {
+                return;
+            }
+
+            const index = state.tabs.findIndex(t => t.id === id);
+            state.tabs = state.tabs.filter(t => t.id !== id);
+
+            if (state.tabs.length > 0) {
+                state.activeTabId = state.tabs[Math.min(index, state.tabs.length - 1)].id;
+            } else {
+                state.activeTabId = null;
+                state.nextNumber = 1;
+            }
+
+            saveState();
+            render();
+        }
+
+        function renameTab(id, newName) {
+            const tab = state.tabs.find(t => t.id === id);
+            if (tab) {
+                tab.name = newName.slice(0, 50);
+                saveState();
+                render();
+            }
+        }
+
+        function setActiveTab(id) {
+            state.activeTabId = id;
+            saveState();
+            render();
+        }
+
+        function updateTabConfig(id, config) {
+            const tab = state.tabs.find(t => t.id === id);
+            if (tab) {
+                tab.config = config;
+                saveState();
+            }
+        }
+
+        function updateTabVariable(id, varName, value) {
+            const tab = state.tabs.find(t => t.id === id);
+            if (tab) {
+                tab.variables[varName] = value;
+                saveState();
+            }
+        }
+
+        function updateTabLineSpacing(id, spacing) {
+            const tab = state.tabs.find(t => t.id === id);
+            if (tab) {
+                tab.lineSpacing = spacing;
+                saveState();
+                // Re-generate if output exists
+                if (tab.output) {
+                    const { output } = replaceVariables(tab.config, tab.variables);
+                    tab.output = applyLineSpacing(output, spacing);
+                    saveState();
+                }
+                render();
+            }
+        }
+
+        function generateOutput(id) {
+            const tab = state.tabs.find(t => t.id === id);
+            if (tab && tab.config.trim()) {
+                const { output } = replaceVariables(tab.config, tab.variables);
+                tab.output = applyLineSpacing(output, tab.lineSpacing);
+                saveState();
+                render();
+            }
+        }
+
+        // Render functions
+        function render() {
+            const app = document.getElementById('app');
+
+            if (state.tabs.length === 0) {
+                app.innerHTML = `
+                    <div class="empty-state">
+                        <h2>No configurations yet</h2>
+                        <p>Create your first configuration to get started</p>
+                        <button onclick="createTab()">+ Create First Configuration</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const activeTab = state.tabs.find(t => t.id === state.activeTabId);
+            if (!activeTab) {
+                setActiveTab(state.tabs[0].id);
+                return;
+            }
+
+            const detectedVars = extractVariables(activeTab.config);
+            const { undefinedVars } = replaceVariables(activeTab.config, activeTab.variables);
+
+            app.innerHTML = `
+                <div class="tab-bar">
+                    ${state.tabs.map(tab => `
+                        <div class="tab ${tab.id === state.activeTabId ? 'active' : ''}" onclick="setActiveTab('${tab.id}')">
+                            <span ondblclick="startEditTab(event, '${tab.id}')">${escapeHtml(tab.name)}</span>
+                            <button onclick="event.stopPropagation(); deleteTab('${tab.id}')">×</button>
+                        </div>
+                    `).join('')}
+                    <button class="new-tab-btn" onclick="createTab()">+</button>
+                </div>
+
+                <div class="content">
+                    <div class="panel left">
+                        <h2>Configuration Template</h2>
+                        <textarea
+                            placeholder="Paste your network configuration here.&#10;&#10;Use {{ variableName }} for values you want to replace.&#10;&#10;Example:&#10;hostname {{ hostname }}&#10;interface GigabitEthernet0/0/0&#10; description {{ interfaceDesc }}&#10; ip address {{ ipAddress }} {{ subnetMask }}"
+                            oninput="updateTabConfig('${activeTab.id}', this.value); debounceRender()"
+                        >${escapeHtml(activeTab.config)}</textarea>
+                    </div>
+
+                    <div class="panel right">
+                        <h2>Variables</h2>
+                        <div class="variables">
+                            ${detectedVars.length === 0 ?
+                                '<p style="color: var(--gray-600); font-style: italic; font-size: 14px;">No variables detected. Use {{ variableName }} in your configuration.</p>' :
+                                detectedVars.map(varName => `
+                                    <div class="var-item">
+                                        <label>{{ ${escapeHtml(varName)} }}</label>
+                                        <input
+                                            type="text"
+                                            value="${escapeHtml(activeTab.variables[varName] || '')}"
+                                            placeholder="Enter value for ${escapeHtml(varName)}"
+                                            oninput="updateTabVariable('${activeTab.id}', '${varName}', this.value)"
+                                        />
+                                    </div>
+                                `).join('')
+                            }
+                        </div>
+
+                        <div class="slider-group">
+                            <label>Insert blank line every ${activeTab.lineSpacing} lines</label>
+                            <input
+                                type="range"
+                                min="1"
+                                max="20"
+                                value="${activeTab.lineSpacing}"
+                                oninput="updateTabLineSpacing('${activeTab.id}', parseInt(this.value))"
+                            />
+                        </div>
+
+                        ${undefinedVars.length > 0 ? `
+                            <div class="warning">
+                                ⚠️ Warning: The following variables are undefined: ${undefinedVars.map(v => `{{ ${v} }}`).join(', ')}
+                            </div>
+                        ` : ''}
+
+                        <button
+                            class="generate-btn"
+                            onclick="generateOutput('${activeTab.id}')"
+                            ${!activeTab.config.trim() ? 'disabled' : ''}
+                        >
+                            Generate Configuration
+                        </button>
+
+                        <div class="output">
+                            <h2>Generated Output</h2>
+                            <textarea readonly placeholder="Click Generate to see output">${escapeHtml(activeTab.output)}</textarea>
+                            ${activeTab.output ? `
+                                <button
+                                    class="generate-btn"
+                                    style="margin-top: 8px; background: var(--blue-600);"
+                                    onclick="copyToClipboard('${activeTab.id}')"
+                                >
+                                    Copy to Clipboard
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function startEditTab(event, id) {
+            event.stopPropagation();
+            const tab = state.tabs.find(t => t.id === id);
+            if (!tab) return;
+
+            const tabEl = event.target.parentElement;
+            const currentName = tab.name;
+
+            tabEl.innerHTML = `
+                <input
+                    type="text"
+                    value="${escapeHtml(currentName)}"
+                    maxlength="50"
+                    onclick="event.stopPropagation()"
+                    onblur="finishEditTab('${id}', this.value)"
+                    onkeydown="handleEditKeydown(event, '${id}', this.value)"
+                    autofocus
+                />
+                <button onclick="event.stopPropagation(); deleteTab('${id}')">×</button>
+            `;
+
+            tabEl.querySelector('input').focus();
+        }
+
+        function finishEditTab(id, newName) {
+            if (newName.trim()) {
+                renameTab(id, newName.trim());
+            } else {
+                render();
+            }
+        }
+
+        function handleEditKeydown(event, id, value) {
+            if (event.key === 'Enter') {
+                finishEditTab(id, value);
+            } else if (event.key === 'Escape') {
+                render();
+            }
+        }
+
+        function copyToClipboard(id) {
+            const tab = state.tabs.find(t => t.id === id);
+            if (tab && tab.output) {
+                navigator.clipboard.writeText(tab.output).then(() => {
+                    alert('Copied to clipboard!');
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                });
+            }
+        }
+
+        // Debounce rendering for performance
+        let renderTimeout;
+        function debounceRender() {
+            clearTimeout(renderTimeout);
+            renderTimeout = setTimeout(render, 300);
+        }
+
+        // Initialize
+        loadState();
+        render();
+    </script>
+</body>
+</html>
