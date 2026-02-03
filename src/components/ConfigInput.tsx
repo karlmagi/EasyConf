@@ -1,19 +1,42 @@
 'use client';
 
+import { useState, useEffect, useRef } from 'react';
+
 interface ConfigInputProps {
   value: string;
   onChange: (value: string) => void;
 }
 
 export default function ConfigInput({ value, onChange }: ConfigInputProps) {
+  const [localValue, setLocalValue] = useState(value);
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  // Update local value when prop changes (e.g., switching tabs)
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setLocalValue(newValue);
+
+    // Debounce the onChange callback
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      onChange(newValue);
+    }, 300);
+  };
+
   return (
     <div className="h-full flex flex-col p-4 bg-white dark:bg-gray-900">
       <h2 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">
         Configuration Template
       </h2>
       <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        value={localValue}
+        onChange={handleChange}
         placeholder={`Paste your network configuration here.
 
 Use {{ variableName }} for values you want to replace.
