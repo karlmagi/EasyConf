@@ -11,6 +11,7 @@ export interface ConfigTab {
   output: string;
   lineSpacing: number;
   syntax: 'bash' | 'cisco' | 'juniper' | 'none';
+  filename: string;
 }
 
 interface TabsState {
@@ -42,6 +43,7 @@ export function useConfigTabs() {
         output: '',
         lineSpacing: 5,
         syntax: 'none',
+        filename: 'config.txt',
       };
       setState({
         tabs: [defaultTab],
@@ -80,6 +82,7 @@ export function useConfigTabs() {
       output: '',
       lineSpacing: 5,
       syntax: 'none',
+      filename: 'config.txt',
     };
 
     const newState: TabsState = {
@@ -194,6 +197,17 @@ export function useConfigTabs() {
     });
   }, [state, immediateSave]);
 
+  const updateFilename = useCallback((id: string, filename: string) => {
+    const newTabs = state.tabs.map((tab) =>
+      tab.id === id ? { ...tab, filename } : tab
+    );
+
+    immediateSave({
+      ...state,
+      tabs: newTabs,
+    });
+  }, [state, immediateSave]);
+
   return {
     tabs: state.tabs,
     activeTab,
@@ -206,5 +220,6 @@ export function useConfigTabs() {
     updateTabOutput,
     updateLineSpacing,
     updateSyntax,
+    updateFilename,
   };
 }
