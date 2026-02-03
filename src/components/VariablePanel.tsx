@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { extractVariables, replaceVariables, applyLineSpacing } from '@/lib/templateParser';
+import VariableInput from './VariableInput';
 
 interface VariablePanelProps {
   config: string;
@@ -91,22 +92,12 @@ export default function VariablePanel({
         ) : (
           <div className="space-y-3">
             {detectedVars.map((varName) => (
-              <div key={varName}>
-                <label
-                  htmlFor={`var-${varName}`}
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  {`{{ ${varName} }}`}
-                </label>
-                <input
-                  id={`var-${varName}`}
-                  type="text"
-                  value={variables[varName] || ''}
-                  onChange={(e) => handleVariableChange(varName, e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                  placeholder={`Enter value for ${varName}`}
-                />
-              </div>
+              <VariableInput
+                key={varName}
+                varName={varName}
+                value={variables[varName] || ''}
+                onChange={handleVariableChange}
+              />
             ))}
           </div>
         )}
