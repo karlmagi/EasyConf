@@ -100,9 +100,19 @@ export default function VariablePanel({
     <div className="h-full flex flex-col p-4 bg-white dark:bg-gray-900">
       {/* Variables Section */}
       <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">
-          Variables
-        </h2>
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Variables
+          </h2>
+          <div className="group relative">
+            <svg className="w-4 h-4 text-gray-400 cursor-help" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+            </svg>
+            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-10">
+              Variables are auto-detected from your config. Type {`{{ name }}`} in the editor to create them.
+            </div>
+          </div>
+        </div>
         {detectedVars.length === 0 ? (
           <p className="text-sm text-gray-500 dark:text-gray-400 italic">
             No variables detected. Use {`{{ variableName }}`} in your configuration.
@@ -123,12 +133,22 @@ export default function VariablePanel({
 
       {/* Line Spacing Slider */}
       <div className="mb-6">
-        <label
-          htmlFor="line-spacing"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-        >
-          Insert blank line every {lineSpacing} lines
-        </label>
+        <div className="flex items-center gap-2 mb-2">
+          <label
+            htmlFor="line-spacing"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Insert blank line every {lineSpacing} lines
+          </label>
+          <div className="group relative">
+            <svg className="w-4 h-4 text-gray-400 cursor-help" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+            </svg>
+            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-10">
+              Adds blank lines to your output for better readability. Changes apply instantly!
+            </div>
+          </div>
+        </div>
         <input
           id="line-spacing"
           type="range"
