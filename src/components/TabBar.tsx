@@ -78,8 +78,7 @@ export default function TabBar({
   };
 
   return (
-    <div className="border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
-      <div className="flex items-center overflow-x-auto">
+    <div className="flex items-center overflow-x-auto flex-1">
         {tabs.map((tab) => (
           <div
             key={tab.id}
@@ -159,7 +158,6 @@ export default function TabBar({
             />
           </svg>
         </button>
-      </div>
     </div>
   );
 }
