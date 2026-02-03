@@ -117,11 +117,156 @@
 
         /* Footer */
         .footer { position: fixed; bottom: 0; right: 0; padding: 8px 16px; font-size: 12px; color: var(--gray-600); background: var(--bg); }
+
+        /* Docs Button */
+        .docs-btn { position: fixed; bottom: 16px; left: 16px; padding: 12px 16px; background: var(--blue-600); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 40; display: flex; align-items: center; gap: 8px; }
+        .docs-btn:hover { background: var(--blue-700); }
+
+        /* Docs Modal */
+        .docs-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 50; padding: 16px; }
+        .docs-modal.active { display: flex; align-items: center; justify-center; }
+        .docs-content { background: var(--bg); border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); max-width: 56rem; width: 100%; max-height: 85vh; display: flex; flex-direction: column; }
+        .docs-header { display: flex; align-items: center; justify-content: space-between; padding: 24px; border-bottom: 1px solid var(--border); }
+        .docs-header h2 { font-size: 24px; font-weight: 700; }
+        .docs-close { background: none; border: none; padding: 8px; cursor: pointer; color: var(--fg); border-radius: 8px; }
+        .docs-close:hover { background: var(--gray-100); }
+        .docs-body { flex: 1; overflow-y: auto; padding: 24px; }
+        .docs-section { margin-bottom: 32px; }
+        .docs-section h3 { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+        .docs-section h4 { font-size: 16px; font-weight: 600; margin: 16px 0 8px; }
+        .docs-section p, .docs-section ul { margin-bottom: 12px; line-height: 1.6; color: var(--gray-700); }
+        .docs-section ul { list-style: disc; padding-left: 24px; }
+        .docs-section ul li { margin-bottom: 8px; }
+        .docs-section code { background: var(--gray-100); padding: 2px 6px; border-radius: 4px; font-family: "Courier New", monospace; font-size: 13px; color: #ff6600; font-weight: 600; }
+        .docs-section .code-block { background: var(--gray-100); padding: 16px; border-radius: 8px; margin: 12px 0; font-family: "Courier New", monospace; font-size: 13px; }
+        .docs-section .tip { background: var(--yellow-50); border-left: 4px solid var(--yellow-600); padding: 12px 16px; margin: 12px 0; border-radius: 4px; font-size: 14px; }
+        .docs-section kbd { background: var(--gray-200); padding: 2px 8px; border-radius: 4px; font-family: sans-serif; font-size: 12px; }
     </style>
 </head>
 <body>
     <div id="app"></div>
     <div class="footer">Vibecoded by karlmagi</div>
+
+    <!-- Docs Button -->
+    <button class="docs-btn" onclick="toggleDocs()">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+        Docs
+    </button>
+
+    <!-- Docs Modal -->
+    <div id="docs-modal" class="docs-modal" onclick="if(event.target===this)toggleDocs()">
+        <div class="docs-content">
+            <div class="docs-header">
+                <h2>EasyConf Documentation</h2>
+                <button class="docs-close" onclick="toggleDocs()">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="docs-body">
+                <div class="docs-section">
+                    <h3>Quick Start</h3>
+                    <ol style="list-style: decimal; padding-left: 24px;">
+                        <li>Paste your network configuration into the left panel</li>
+                        <li>Replace values with variables using <code>{{ `{{ variableName }}` }}</code> syntax</li>
+                        <li>Fill in the variable values on the right panel</li>
+                        <li>Click <strong style="color: var(--green-600);">Generate Configuration</strong></li>
+                        <li>Copy or download your customized configuration</li>
+                    </ol>
+                </div>
+
+                <div class="docs-section">
+                    <h3>Working with Variables</h3>
+                    <h4>Variable Syntax</h4>
+                    <p>Variables use Jinja2-style syntax with double curly braces:</p>
+                    <div class="code-block">hostname <span style="color: #ff6600; font-weight: 600;">{{ `{{ hostname }}` }}</span><br>interface GigabitEthernet0/0/0<br>&nbsp;&nbsp;ip address <span style="color: #ff6600; font-weight: 600;">{{ `{{ ipAddress }}` }}</span> <span style="color: #ff6600; font-weight: 600;">{{ `{{ subnetMask }}` }}</span></div>
+
+                    <h4>Adding Variables</h4>
+                    <ul>
+                        <li>Type <code>{{ `{{ variableName }}` }}</code> directly in your config</li>
+                        <li>Or click the <strong style="color: var(--blue-600);">+ Add Variable</strong> button</li>
+                        <li>Variables are auto-detected and shown in the right panel</li>
+                        <li>Variable names: letters, numbers, underscores only</li>
+                        <li>Case-sensitive: <code>{{ `{{ Hostname }}` }}</code> ≠ <code>{{ `{{ hostname }}` }}</code></li>
+                    </ul>
+                </div>
+
+                <div class="docs-section">
+                    <h3>Managing Tabs</h3>
+                    <ul>
+                        <li><strong>Create:</strong> Click the <strong>+</strong> button in the tab bar</li>
+                        <li><strong>Rename:</strong> Double-click a tab name to edit it</li>
+                        <li><strong>Close:</strong> Click the <strong>×</strong> button (confirms if tab has content)</li>
+                        <li>Each tab stores its own config, variables, and output independently</li>
+                    </ul>
+                </div>
+
+                <div class="docs-section">
+                    <h3>Syntax Highlighting</h3>
+                    <p>Choose from the dropdown above the configuration editor:</p>
+                    <ul>
+                        <li><strong>No Highlighting</strong> - Plain text (fastest)</li>
+                        <li><strong>Bash</strong> - For shell scripts</li>
+                        <li><strong>Cisco IOS</strong> - For Cisco routers/switches</li>
+                        <li><strong>Juniper SRX</strong> - For Juniper firewalls</li>
+                    </ul>
+                    <p>Variables are always highlighted in <span style="color: #ff6600; font-weight: 600;">bright orange</span>.</p>
+                </div>
+
+                <div class="docs-section">
+                    <h3>Generating Output</h3>
+                    <h4>Line Spacing</h4>
+                    <p>Use the slider to insert blank lines for readability (1-20 lines, default: 5). Changes apply instantly!</p>
+
+                    <h4>Downloading Output</h4>
+                    <ul>
+                        <li>Enter a filename (e.g., <code>router-config.txt</code>)</li>
+                        <li>Click the <strong style="color: var(--green-600);">Download</strong> button</li>
+                        <li>Or use <strong>Copy to Clipboard</strong> for quick copying</li>
+                    </ul>
+                </div>
+
+                <div class="docs-section">
+                    <h3>Data Storage & Privacy</h3>
+                    <ul>
+                        <li>All data is stored <strong>locally in your browser</strong></li>
+                        <li>Nothing is sent to any server - 100% private</li>
+                        <li>Your tabs, configs, and variables persist across sessions</li>
+                        <li>Clearing browser data will delete all saved configurations</li>
+                        <li>Works completely offline</li>
+                    </ul>
+                </div>
+
+                <div class="docs-section">
+                    <h3>Keyboard Shortcuts</h3>
+                    <ul>
+                        <li><kbd>Tab</kbd> - Navigate between fields</li>
+                        <li><kbd>Double-click</kbd> - Rename tab</li>
+                        <li><kbd>Enter</kbd> - Save tab name</li>
+                        <li><kbd>Esc</kbd> - Cancel tab rename</li>
+                    </ul>
+                </div>
+
+                <div class="docs-section">
+                    <h3>Tips & Tricks</h3>
+                    <ul>
+                        <li>Use descriptive variable names - <code>{{ `{{ router1Hostname }}` }}</code> is clearer than <code>{{ `{{ h1 }}` }}</code></li>
+                        <li>Create tab templates for different device types</li>
+                        <li>Keep backups - Download important configs regularly</li>
+                        <li>Test before deploying - Always review generated output</li>
+                    </ul>
+                </div>
+
+                <div style="text-align: center; color: var(--gray-600); font-size: 12px; padding-top: 24px; border-top: 1px solid var(--border);">
+                    <p>Vibecoded by karlmagi</p>
+                    <p style="margin-top: 8px;">EasyConf - Network Configuration Tool</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         // State management
@@ -683,6 +828,22 @@
                 });
             }
         }
+
+        // Docs modal toggle
+        function toggleDocs() {
+            const modal = document.getElementById('docs-modal');
+            modal.classList.toggle('active');
+        }
+
+        // Close docs on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('docs-modal');
+                if (modal.classList.contains('active')) {
+                    toggleDocs();
+                }
+            }
+        });
 
         // Initialize
         loadState();

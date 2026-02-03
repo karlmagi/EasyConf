@@ -7,9 +7,11 @@ import ConfigInput from '@/components/ConfigInput';
 import VariablePanel from '@/components/VariablePanel';
 import EmptyState from '@/components/EmptyState';
 import SerialConsole from '@/components/SerialConsole';
+import DocsModal from '@/components/DocsModal';
 
 export default function Home() {
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
+  const [isDocsOpen, setIsDocsOpen] = useState(false);
   const {
     tabs,
     activeTab,
@@ -89,11 +91,29 @@ export default function Home() {
         Vibecoded by karlmagi
       </div>
 
+      {/* Docs Button - Bottom Left */}
+      <button
+        onClick={() => setIsDocsOpen(true)}
+        className="fixed bottom-4 left-4 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg transition-colors flex items-center gap-2 z-40"
+        title="Open Documentation"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+        Docs
+      </button>
+
       {/* Serial Console */}
       <SerialConsole
         isOpen={isConsoleOpen}
         onClose={() => setIsConsoleOpen(false)}
         initialText={activeTab?.output}
+      />
+
+      {/* Docs Modal */}
+      <DocsModal
+        isOpen={isDocsOpen}
+        onClose={() => setIsDocsOpen(false)}
       />
     </div>
   );
