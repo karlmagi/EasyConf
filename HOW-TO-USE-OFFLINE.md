@@ -1,28 +1,51 @@
 # EasyConf - Offline Usage Instructions
 
-## Quick Start (No Installation Required!)
+## Quick Start
 
-Your application is ready to use offline. Here's what you need to know:
+**IMPORTANT:** This application requires a local web server. Double-clicking `index.html` directly will NOT work due to browser security restrictions.
 
-### Option 1: Use the `out/` folder directly (RECOMMENDED)
+### Option 1: Use the Start Scripts (EASIEST)
 
-1. Go to the `out/` folder in your file explorer
-2. Double-click `index.html`
-3. Your browser will open and the app will work immediately!
+**Windows:**
+1. Go to the `out/` folder
+2. Double-click `START-SERVER.bat`
+3. Browser opens automatically at http://localhost:8000
 
-**Important:** Keep all files together in the `out/` folder. Don't move or delete anything.
+**Mac/Linux:**
+1. Go to the `out/` folder
+2. Double-click `START-SERVER.sh` (or run `bash START-SERVER.sh`)
+3. Browser opens at http://localhost:8000
 
-### Option 2: Use the compressed archive
+The scripts automatically detect and use Python or Node.js (usually pre-installed).
 
-1. Extract `EasyConf-Standalone.tar.gz` to any folder
-2. Open the extracted folder
-3. Double-click `index.html`
+### Option 2: Manual Server Start
+
+If you have Python installed (usually pre-installed on Mac/Linux):
+
+```bash
+cd out/
+python -m http.server 8000
+# Then open http://localhost:8000 in your browser
+```
+
+### Option 3: Use GitHub Pages (No Setup)
+
+Visit the online version at: [Your GitHub Pages URL]
+
+## Why a Local Server?
+
+Modern web applications use absolute paths for resources (JavaScript, CSS, fonts). These paths only work with HTTP protocol, not when opening files directly (`file://` protocol).
+
+The good news:
+- ✅ Local server runs on YOUR computer only
+- ✅ No internet needed
+- ✅ No installation if you have Python (usually pre-installed)
+- ✅ Start scripts handle everything automatically
 
 ## What You Can Do
 
-✅ **No server needed** - Opens directly in your browser
-✅ **Works offline** - No internet connection required
-✅ **No installation** - No npm, Node.js, Apache, or any software needed
+✅ **Works offline** - No internet connection required (after initial start)
+✅ **Minimal setup** - Just run the start script
 ✅ **Portable** - Copy the `out/` folder to USB drive, network share, anywhere
 ✅ **Persistent data** - Your configurations save automatically in browser storage
 
