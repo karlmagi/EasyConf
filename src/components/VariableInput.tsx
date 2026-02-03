@@ -34,9 +34,9 @@ function VariableInput({ varName, value, onChange }: VariableInputProps) {
     <div>
       <label
         htmlFor={`var-${varName}`}
-        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        className="block text-sm font-bold text-gray-900 dark:text-gray-100 mb-1"
       >
-        {`{{ ${varName} }}`}
+        {varName}
       </label>
       <input
         id={`var-${varName}`}

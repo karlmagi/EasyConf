@@ -8,6 +8,7 @@ import 'prismjs/themes/prism.css';
 
 // Custom language definitions for network devices
 const ciscoLanguage = {
+  'variable': /\{\{\s*\w+\s*\}\}/,
   'comment': /!.*/,
   'string': /"(?:\\.|[^\\"\r\n])*"/,
   'keyword': /\b(?:interface|router|ip|ipv6|access-list|route-map|policy-map|class-map|service-policy|vlan|switchport|spanning-tree|hostname|enable|line|aaa|crypto|tunnel|permit|deny|shutdown|no|exit|end)\b/,
@@ -17,6 +18,7 @@ const ciscoLanguage = {
 };
 
 const juniperLanguage = {
+  'variable': /\{\{\s*\w+\s*\}\}/,
   'comment': /(#|\/\*[\s\S]*?\*\/)/,
   'string': /"(?:\\.|[^\\"\r\n])*"/,
   'keyword': /\b(?:set|delete|edit|top|up|show|commit|rollback|interfaces|protocols|routing-options|policy-options|firewall|security|zones|policies|nat|ike|ipsec|system|groups|apply-groups)\b/,
@@ -25,8 +27,14 @@ const juniperLanguage = {
   'punctuation': /[{}[\];(),.:]/
 };
 
+const bashLanguageExtended = {
+  ...languages.bash,
+  'variable': /\{\{\s*\w+\s*\}\}/,
+};
+
 languages.cisco = ciscoLanguage;
 languages.juniper = juniperLanguage;
+languages.bashExtended = bashLanguageExtended;
 
 interface ConfigInputProps {
   value: string;
@@ -36,27 +44,9 @@ interface ConfigInputProps {
 }
 
 export default function ConfigInput({ value, syntax, onChange, onSyntaxChange }: ConfigInputProps) {
-  const [localValue, setLocalValue] = useState(value);
   const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const editorRef = useRef<HTMLDivElement>(null);
-
-  // Update local value when prop changes (e.g., switching tabs)
-  useEffect(() => {
-    setLocalValue(value);
-  }, [value]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value;
-    setLocalValue(newValue);
-
-    // Debounce the onChange callback
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => {
-      onChange(newValue);
-    }, 300);
-  };
+  const isTypingRef = useRef(false);
 
   const handleAddVariable = () => {
     const varName = prompt('Enter variable name:');
@@ -65,23 +55,18 @@ export default function ConfigInput({ value, syntax, onChange, onSyntaxChange }:
     const cleanVarName = varName.trim().replace(/\s+/g, '_');
     const variableText = `{{ ${cleanVarName} }}`;
 
-    // Get current selection from editor
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      const newValue = localValue + variableText;
-      setLocalValue(newValue);
-      onChange(newValue);
-    }
+    const newValue = value + variableText;
+    onChange(newValue);
   };
 
   const getHighlighter = () => {
     if (syntax === 'none') {
       return (code: string) => code;
     }
-    const lang = syntax === 'bash' ? languages.bash :
+    const lang = syntax === 'bash' ? languages.bashExtended :
                  syntax === 'cisco' ? languages.cisco :
                  syntax === 'juniper' ? languages.juniper :
-                 languages.bash;
+                 languages.bashExtended;
 
     return (code: string) => highlight(code, lang, syntax);
   };
@@ -113,16 +98,23 @@ export default function ConfigInput({ value, syntax, onChange, onSyntaxChange }:
         </div>
       </div>
       <div ref={editorRef} className="flex-1 overflow-auto border border-gray-300 dark:border-gray-700 rounded-lg">
+        <style>{`
+          .token.variable {
+            color: #ff6600 !important;
+            font-weight: 600;
+          }
+        `}</style>
         <Editor
-          value={localValue}
+          value={value}
           onValueChange={(code) => {
-            setLocalValue(code);
+            isTypingRef.current = true;
             if (timeoutRef.current) {
               clearTimeout(timeoutRef.current);
             }
             timeoutRef.current = setTimeout(() => {
               onChange(code);
-            }, 300);
+              isTypingRef.current = false;
+            }, 150);
           }}
           highlight={getHighlighter()}
           padding={12}
