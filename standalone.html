@@ -66,7 +66,11 @@
 
         h2 { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
 
-        textarea { width: 100%; height: calc(100% - 40px); padding: 12px; font-family: "Courier New", monospace; font-size: 13px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--fg); resize: none; }
+        .header-with-button { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .add-var-btn { padding: 6px 12px; background: var(--blue-600); color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
+        .add-var-btn:hover { background: var(--blue-700); }
+
+        textarea { width: 100%; height: calc(100% - 50px); padding: 12px; font-family: "Courier New", monospace; font-size: 13px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--fg); resize: none; }
         textarea:focus { outline: 2px solid var(--blue-500); outline-offset: 0; }
 
         /* Variables */
@@ -420,7 +424,10 @@
 
                 <div class="content">
                     <div class="panel left">
-                        <h2>Configuration Template</h2>
+                        <div class="header-with-button">
+                            <h2>Configuration Template</h2>
+                            <button id="add-var-btn" class="add-var-btn">+ Add Variable</button>
+                        </div>
                         <textarea
                             id="config-textarea"
                             placeholder="Paste your network configuration here.&#10;&#10;Use {{ variableName }} for values you want to replace.&#10;&#10;Example:&#10;hostname {{ hostname }}&#10;interface GigabitEthernet0/0/0&#10; description {{ interfaceDesc }}&#10; ip address {{ ipAddress }} {{ subnetMask }}"
@@ -495,8 +502,45 @@
                 });
             }
 
+            const addVarBtn = document.getElementById('add-var-btn');
+            if (addVarBtn) {
+                addVarBtn.addEventListener('click', () => {
+                    handleAddVariable(activeTab.id);
+                });
+            }
+
             // Initial variables panel render
             updateVariablesPanel();
+        }
+
+        function handleAddVariable(tabId) {
+            const tab = state.tabs.find(t => t.id === tabId);
+            if (!tab) return;
+
+            const varName = prompt('Enter variable name:');
+            if (!varName || !varName.trim()) return;
+
+            const cleanVarName = varName.trim().replace(/\s+/g, '_');
+            const variableText = `{{ ${cleanVarName} }}`;
+
+            const textarea = document.getElementById('config-textarea');
+            if (textarea) {
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const newValue =
+                    tab.config.substring(0, start) +
+                    variableText +
+                    tab.config.substring(end);
+
+                updateTabConfig(tabId, newValue);
+
+                // Set cursor position after inserted variable
+                setTimeout(() => {
+                    const newCursorPos = start + variableText.length;
+                    textarea.focus();
+                    textarea.setSelectionRange(newCursorPos, newCursorPos);
+                }, 0);
+            }
         }
 
         function escapeHtml(text) {
